@@ -1,0 +1,24 @@
+@font-face {
+  font-family: 'SternMono';
+  src: url('../fonts/Stern_FjallaOne_MONONUMBERS.ttf') format('truetype');
+  font-display: swap;
+}
+
+/* Apply to score displays */
+.score-text {
+  font-family: 'SternMono', monospace;
+  letter-spacing: 0.1em;  /* Adjust spacing for readability */
+}
+
+/* Example usage classes */
+.target-score {
+  font-family: 'SternMono', monospace;
+  font-size: 2.5rem;
+  color: #7DFF00;  /* Toxic green from our color scheme */
+}
+
+.player-score {
+  font-family: 'SternMono', monospace;
+  font-size: 2rem;
+  color: #F5F5F5;  /* Off-white from our color scheme */
+}

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Park Pin Putt</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @font-face {
+            font-family: 'SternMono';
+            src: url('/static/fonts/Stern_FjallaOne_MONONUMBERS.ttf') format('truetype');
+        }
+        .score-text {
+            font-family: 'SternMono', monospace;
+        }
+    </style>
+</head>
+<body class="bg-black text-gray-100 min-h-screen">
+    <div class="max-w-4xl mx-auto p-4">
+        <!-- Header -->
+        <div class="bg-blue-600 rounded-lg p-6 shadow-lg border-2 border-green-400 mb-8">
+            <h1 class="text-3xl font-bold text-center">PARK PIN PUTT</h1>
+            <div class="flex justify-center my-4">
+                <img src="/static/images/logo.png" alt="Venom Logo" class="h-auto w-64">
+            </div>
+            <p 	class="w-full text-center text-6xl p-4 text-yellow-300 score-text [text-shadow:_-1px_1px_0_#000,_1px_1px_0_#000,_1px_-1px_0_#000,_-1px_-1px_0_#000]">
+                TARGET: <span id="targetScore" class="text-6xl">{{target|default('2,500,000')}}</span>
+            </p>
+        </div>
+
+        <!-- Score Entry -->
+        <div class="bg-indigo-900 rounded-lg p-6 shadow-lg border border-blue-500 mb-8">
+            <div class="space-y-6">
+                <div class="bg-indigo-950 p-4 rounded-lg border border-blue-400">
+                    <form id="scoreForm" class="space-y-4">
+                        <div class="mb-4">
+                            <div class="flex gap-2">
+                                <input type="file" id="scoreImage" name="scoreImage" accept="image/*" capture="environment" class="hidden">
+                                <label for="scoreImage" class="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded cursor-pointer">
+                                    <span>Take Photo</span>
+                                </label>
+                                
+                                <input type="file" id="uploadImage" name="uploadImage" accept="image/*" class="hidden">
+                                <label for="uploadImage" class="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded cursor-pointer">
+                                    <span>Upload Image</span>
+                                </label>
+                            </div>
+                            <div id="previewContainer" class="hidden mt-4">
+                                <img id="imagePreview" class="max-w-full h-auto mx-auto rounded-lg" alt="Score preview">
+                                <div id="processingIndicator" class="text-center mt-2 text-blue-400">Processing image...</div>
+                            </div>
+                                <input type="text" name="score" readonly required 
+								class="w-full bg-indigo-950 text-center text-6xl font-bold p-4 text-yellow-300 score-text [text-shadow:_-1px_1px_0_#000,_1px_1px_0_#000,_1px_-1px_0_#000,_-1px_-1px_0_#000]">
+                            <label class="block text-center text-xl text-blue-400">INITIALS</label>
+                            <input type="text" name="initials" maxlength="3" required pattern="[A-Za-z]{1,3}" class="w-32 mx-auto block bg-indigo-950 border-2 border-blue-500 rounded text-center text-2xl p-2 text-green-400 score-text uppercase">
+                        </div>
+                        <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg text-xl font-bold transition-colors">
+                            SUBMIT SCORE
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="bg-indigo-900 rounded-lg p-6 border border-blue-500">
+            <h2 class="text-3xl font-bold text-center text-blue-400 mb-6">TOP SCORES</h2>
+            <div id="leaderboard" class="space-y-3"></div>
+        </div>
+
+        <!-- Ragtime Logo -->
+        <div class="flex justify-center mt-8 mb-4">
+            <img src="/static/images/ragtime.jpg" alt="Ragtime Logo" class="h-64">
+        </div>
+    </div>
+
+    <script>
+        function formatNumber(num) {
+            return new Intl.NumberFormat().format(num);
+        }
+
+        function updateLeaderboard() {
+            fetch('/api/leaderboard')
+                .then(response => response.json())
+                .then(data => {
+                    const leaderboardDiv = document.getElementById('leaderboard');
+                    leaderboardDiv.innerHTML = '';
+                    
+                    data.leaderboard.forEach((entry, index) => {
+                        const diff = entry.score - data.target;
+                        const diffStr = diff >= 0 ? `+${formatNumber(diff)}` : formatNumber(diff);
+                        
+                        const row = document.createElement('div');
+                        row.className = 'flex items-center justify-between bg-indigo-950 p-4 rounded-lg text-xl';
+                        row.innerHTML = `
+                            <span class="text-green-400 font-bold w-16">${index + 1}.</span>
+                            <a href="/player/${entry.initials}" class="text-blue-400 score-text w-24 text-center hover:text-blue-300">
+                                ${entry.initials}
+                            </a>
+                            <span class="text-gray-100 score-text w-40 text-right">${formatNumber(entry.score)}</span>
+                            <span class="score-text w-32 text-right ${diff >= 0 ? 'text-green-400' : 'text-red-500'}">${diffStr}</span>
+                        `;
+                        leaderboardDiv.appendChild(row);
+                    });
+                });
+        }
+
+        ['scoreImage', 'uploadImage'].forEach(id => {
+            document.getElementById(id).addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const preview = document.getElementById('imagePreview');
+                const previewContainer = document.getElementById('previewContainer');
+                const processingIndicator = document.getElementById('processingIndicator');
+
+                preview.src = URL.createObjectURL(file);
+                previewContainer.classList.remove('hidden');
+                processingIndicator.classList.remove('hidden');
+
+                const formData = new FormData();
+                formData.append('image', file);
+
+                fetch('/api/process_image', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    processingIndicator.classList.add('hidden');
+                    if (data.score) {
+                        document.querySelector('input[name="score"]').value = formatNumber(data.score);
+                    } else {
+                        throw new Error(data.error || 'Score detection failed');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    processingIndicator.classList.add('hidden');
+                    alert('Could not detect score in image. Please try another image.');
+                });
+            });
+        });
+
+        document.getElementById('scoreForm').onsubmit = function(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const scoreInput = document.querySelector('input[name="score"]');
+            if (!scoreInput.value) {
+                alert('Please upload a score image first');
+                return;
+            }
+            formData.set('score', scoreInput.value.replace(/,/g, ''));
+            
+            fetch('/api/score', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    updateLeaderboard();
+                    e.target.reset();
+                    document.getElementById('previewContainer').classList.add('hidden');
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error submitting score. Please try again.');
+            });
+        };
+
+        // Initial leaderboard load
+        updateLeaderboard();
+        
+        // Refresh leaderboard every 60 seconds
+        setInterval(updateLeaderboard, 60000);
+    </script>
+</body>
+</html>
