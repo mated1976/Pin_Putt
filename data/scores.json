@@ -1,5 +1,29 @@
 {
-  "current_target": null,
+  "current_target": 1000,
   "events": [],
-  "players": {}
+  "players": {
+    "MFB": {
+      "attempts": [
+        {
+          "score": 12802680,
+          "timestamp": "2025-02-07T15:15:05.988892",
+          "distance": 12801680,
+          "target": 1000
+        },
+        {
+          "score": 20198690,
+          "timestamp": "2025-02-07T15:17:22.122420",
+          "distance": 20197690,
+          "target": 1000
+        },
+        {
+          "score": 63244790,
+          "timestamp": "2025-02-07T15:17:58.673467",
+          "distance": 63243790,
+          "target": 1000
+        }
+      ],
+      "best_distance": 12801680
+    }
+  }
 }
