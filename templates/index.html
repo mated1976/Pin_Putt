@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Park Pin Putt</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @font-face {
             font-family: 'SternMono';
@@ -23,7 +24,7 @@
             <div class="flex justify-center my-4">
                 <img src="/static/images/logo.png" alt="Venom Logo" class="h-auto w-64">
             </div>
-            <p 	class="w-full text-center text-6xl p-4 text-yellow-300 score-text [text-shadow:_-1px_1px_0_#000,_1px_1px_0_#000,_1px_-1px_0_#000,_-1px_-1px_0_#000]">
+            <p class="w-full text-center text-6xl p-4 text-yellow-300 score-text [text-shadow:_-1px_1px_0_#000,_1px_1px_0_#000,_1px_-1px_0_#000,_-1px_-1px_0_#000]">
                 TARGET: <span id="targetScore" class="text-6xl">{{target|default('2,500,000')}}</span>
             </p>
         </div>
@@ -36,25 +37,29 @@
                         <div class="mb-4">
                             <div class="flex gap-2">
                                 <input type="file" id="scoreImage" name="scoreImage" accept="image/*" capture="environment" class="hidden">
-                                <label for="scoreImage" class="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded cursor-pointer">
-                                    <span>Take Photo</span>
+                                <label for="scoreImage" class="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-4 px-4 rounded-lg cursor-pointer transition-colors">
+                                    <i data-lucide="camera" class="w-6 h-6"></i>
+                                    <span class="font-semibold">Take Photo</span>
                                 </label>
                                 
                                 <input type="file" id="uploadImage" name="uploadImage" accept="image/*" class="hidden">
-                                <label for="uploadImage" class="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded cursor-pointer">
-                                    <span>Upload Image</span>
+                                <label for="uploadImage" class="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-4 px-4 rounded-lg cursor-pointer transition-colors">
+                                    <i data-lucide="upload" class="w-6 h-6"></i>
+                                    <span class="font-semibold">Upload</span>
                                 </label>
                             </div>
                             <div id="previewContainer" class="hidden mt-4">
                                 <img id="imagePreview" class="max-w-full h-auto mx-auto rounded-lg" alt="Score preview">
                                 <div id="processingIndicator" class="text-center mt-2 text-blue-400">Processing image...</div>
                             </div>
-                                <input type="text" name="score" readonly required 
-								class="w-full bg-indigo-950 text-center text-6xl font-bold p-4 text-yellow-300 score-text [text-shadow:_-1px_1px_0_#000,_1px_1px_0_#000,_1px_-1px_0_#000,_-1px_-1px_0_#000]">
+                            <input type="text" name="score" readonly required 
+                                class="w-full bg-indigo-950 text-center text-6xl font-bold p-4 text-yellow-300 score-text [text-shadow:_-1px_1px_0_#000,_1px_1px_0_#000,_1px_-1px_0_#000,_-1px_-1px_0_#000]">
                             <label class="block text-center text-xl text-blue-400">INITIALS</label>
-                            <input type="text" name="initials" maxlength="3" required pattern="[A-Za-z]{1,3}" class="w-32 mx-auto block bg-indigo-950 border-2 border-blue-500 rounded text-center text-2xl p-2 text-green-400 score-text uppercase">
+                            <input type="text" name="initials" maxlength="3" required pattern="[A-Za-z]{1,3}"
+                                class="w-32 mx-auto block bg-indigo-950 border-2 border-blue-500 rounded text-center text-2xl p-2 text-green-400 score-text uppercase">
                         </div>
-                        <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg text-xl font-bold transition-colors">
+                        <button type="submit" 
+                            class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg text-xl font-bold transition-colors">
                             SUBMIT SCORE
                         </button>
                     </form>
@@ -75,6 +80,9 @@
     </div>
 
     <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
         function formatNumber(num) {
             return new Intl.NumberFormat().format(num);
         }
