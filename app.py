@@ -4,7 +4,7 @@ from database import PinPuttDB
 from functools import wraps
 from config import Config
 from werkzeug.utils import secure_filename
-from ocr import OCRSpaceAPI
+from ocr import OCRSpaceAPI, OCRConfig
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -67,15 +67,19 @@ def submit_score():
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 400
 
+
+    # rest of your code
+    
 @app.route('/api/process_image', methods=['POST'])
 def process_image():
-    app.logger.info("Process image endpoint hit")
-    
-    if 'image' not in request.files:
-        app.logger.error("No image file in request")
-        return jsonify({'error': 'No image file'}), 400
+    app.logger.info("Starting image processing")
+    if not Config.OCR_PRO_KEY:
+        app.logger.error("No OCR API keys found")
+        return jsonify({'error': 'OCR API keys not configured'}), 500
         
     file = request.files['image']
+    app.logger.info(f"Received file: {file.filename if file else 'No file'}")
+    
     if not file.filename:
         app.logger.error("No filename")
         return jsonify({'error': 'No selected file'}), 400
@@ -87,19 +91,39 @@ def process_image():
     try:
         filename = secure_filename(file.filename)
         filepath = os.path.join(Config.UPLOADS_DIR, filename)
-        app.logger.info(f"Saving file to: {filepath}")
+        app.logger.info(f"About to save file to: {filepath}")
         file.save(filepath)
+        app.logger.info(f"File saved successfully")
         
-        ocr = OCRSpaceAPI(Config.OCR_API_KEY, debug=Config.OCR_DEBUG)
+        # Verify file exists and has size
+        if os.path.exists(filepath):
+            size = os.path.getsize(filepath)
+            app.logger.info(f"File size: {size} bytes")
+        else:
+            app.logger.error("File does not exist after save")
+            return jsonify({'error': 'File save failed'}), 500
+        
+        ocr_config = OCRConfig(
+            pro_key=Config.OCR_PRO_KEY,
+            free_key=Config.OCR_FREE_KEY,
+            debug=Config.OCR_DEBUG
+        )
+        ocr = OCRSpaceAPI(ocr_config)
+        
         app.logger.info("Starting OCR processing")
-        score = ocr.extract_text(filepath)
-        app.logger.info(f"OCR result: {score}")
+        result = ocr.extract_text(filepath)
+        app.logger.info(f"OCR result: {result}")
         
-        if score is None:
+        if result is None:
             app.logger.error("No score detected")
             return jsonify({'error': 'Could not detect score'}), 400
             
-        return jsonify({'score': score})
+        return jsonify({
+            'score': result.score,
+            'confidence': result.confidence,
+            'endpoint_used': result.endpoint_used,
+            'strategy': result.strategy_used
+        })
         
     except Exception as e:
         app.logger.error(f"Error processing image: {str(e)}")
@@ -108,7 +132,7 @@ def process_image():
         if os.path.exists(filepath):
             os.remove(filepath)
             app.logger.info("Cleaned up uploaded file")
-
+            
 @app.route('/api/leaderboard')
 def get_leaderboard():
     target = db.get_current_target()

@@ -1,3 +1,4 @@
+# config.py
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -18,17 +19,19 @@ class Config:
     OCR_CONFIDENCE_THRESHOLD = 0.8
     
     # Security
-    SECRET_KEY = os.getenv('SECRET_KEY', 'dev-key-change-in-production')
-    ADMIN_KEY = os.getenv('ADMIN_KEY', 'pinball123')
-    OCR_API_KEY = os.getenv('OCR_API_KEY')
-    
-    # Upload settings
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+    DATA_DIR = os.getenv('DATA_DIR', 'data')
+    ADMIN_KEY = os.getenv('ADMIN_KEY', 'default_admin_key')
     
     # OCR settings
+    OCR_API_KEY = os.getenv('OCR_PRO_KEY')  # For backwards compatibility
+    OCR_PRO_KEY = os.getenv('OCR_PRO_KEY')
+    OCR_FREE_KEY = os.getenv('OCR_FREE_KEY')
     OCR_ENGINE = 2  # More accurate but slower
     OCR_LANGUAGE = 'eng'
     OCR_DEBUG = True  # Enable debug logging for OCR
     OCR_MIN_SCORE_LENGTH = 5  # Minimum digits for a valid score
     OCR_MAX_SCORE_LENGTH = 15  # Maximum digits for a valid score
+    
+    # Upload settings
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
