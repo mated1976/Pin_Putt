@@ -20,7 +20,7 @@ class Config:
     # Security
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-key-change-in-production')
     ADMIN_KEY = os.getenv('ADMIN_KEY', 'pinball123')
-    OCR_API_KEY = os.getenv('OCR_API_KEY', 'GP88T2XWT2DDX')
+    OCR_API_KEY = os.getenv('OCR_API_KEY')
     
     # Upload settings
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
