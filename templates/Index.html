@@ -1,0 +1,54 @@
+import React from 'react';
+
+const ScoreDisplay = () => {
+  return (
+    <div className="bg-black min-h-screen p-8">
+      {/* Header */}
+      <div className="bg-zinc-900 rounded-lg p-6 shadow-lg">
+        <h1 className="text-3xl font-bold text-center text-zinc-300">PARK PIN PUTT</h1>
+        <div className="my-4 text-center">
+          <img src="/api/placeholder/256/128" alt="Logo" className="h-auto w-64 mx-auto" />
+        </div>
+      </div>
+
+      {/* Score Display */}
+      <div className="my-8 text-center p-6">
+        <p style={{ color: '#FFD768' }} 
+           className="text-6xl font-mono [text-shadow:_-1px_1px_0_#000,_1px_1px_0_#000,_1px_-1px_0_#000,_-1px_-1px_0_#000]">
+          TARGET: 2,500,000
+        </p>
+      </div>
+
+      {/* Form */}
+      <div className="bg-zinc-900 rounded-lg p-6 mb-8">
+        <form className="space-y-4">
+          <input type="number" 
+                 className="w-full rounded p-2 bg-black text-center text-2xl"
+                 style={{ color: '#FFD768' }}
+                 placeholder="Enter Score" />
+          <button className="w-full bg-zinc-800 text-zinc-300 py-3 rounded-lg text-xl font-bold hover:bg-zinc-700">
+            SUBMIT
+          </button>
+        </form>
+      </div>
+
+      {/* Leaderboard */}
+      <div className="bg-zinc-900 rounded-lg p-6">
+        <h2 className="text-2xl font-bold text-center mb-4 text-zinc-300">
+          LEADERBOARD
+        </h2>
+        <div className="space-y-2">
+          {[2500000, 2400000, 2300000].map((score, i) => (
+            <div key={i} 
+                 className="flex justify-between p-3 rounded bg-zinc-800">
+              <span style={{ color: '#FFD768' }}>Player {i + 1}</span>
+              <span style={{ color: '#FFD768' }}>{score.toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ScoreDisplay;
