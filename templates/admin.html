@@ -1,3 +1,4 @@
+<!-- admin.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -126,8 +127,189 @@
     </div>
 
     <script>
-        // JavaScript remains unchanged
-        // ... [existing JavaScript code]
+        function formatNumber(num) {
+            return new Intl.NumberFormat().format(num);
+        }
+
+        function renderScoreDistribution(data) {
+            if (!data.score_distribution) return;
+
+            const chartDiv = document.getElementById('scoreGraph');
+            const width = chartDiv.offsetWidth;
+            const height = chartDiv.offsetHeight;
+            const padding = 40;
+
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', width);
+            svg.setAttribute('height', height);
+            svg.setAttribute('class', 'score-distribution');
+
+            const maxCount = Math.max(...data.score_distribution.map(d => d.count));
+            const barWidth = (width - padding * 2) / data.score_distribution.length;
+
+            data.score_distribution.forEach((d, i) => {
+                const barHeight = (d.count / maxCount) * (height - padding * 2);
+                const bar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                bar.setAttribute('x', padding + i * barWidth);
+                bar.setAttribute('y', height - padding - barHeight);
+                bar.setAttribute('width', barWidth - 2);
+                bar.setAttribute('height', barHeight);
+                bar.setAttribute('fill', '#4F46E5');
+                
+                bar.setAttribute('data-count', d.count);
+                bar.setAttribute('data-range', d.range);
+                bar.setAttribute('data-percentage', d.percentage);
+                bar.addEventListener('mouseover', showTooltip);
+                bar.addEventListener('mouseout', hideTooltip);
+                
+                svg.appendChild(bar);
+            });
+
+            const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            xAxis.setAttribute('x1', padding);
+            xAxis.setAttribute('y1', height - padding);
+            xAxis.setAttribute('x2', width - padding);
+            xAxis.setAttribute('y2', height - padding);
+            xAxis.setAttribute('stroke', '#9CA3AF');
+            svg.appendChild(xAxis);
+
+            const yAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            yAxis.setAttribute('x1', padding);
+            yAxis.setAttribute('y1', padding);
+            yAxis.setAttribute('x2', padding);
+            yAxis.setAttribute('y2', height - padding);
+            yAxis.setAttribute('stroke', '#9CA3AF');
+            svg.appendChild(yAxis);
+
+            chartDiv.innerHTML = '';
+            chartDiv.appendChild(svg);
+        }
+
+        function showTooltip(event) {
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            tooltip.innerHTML = `
+                Range: ${event.target.dataset.range}<br>
+                Count: ${event.target.dataset.count}<br>
+                Percentage: ${event.target.dataset.percentage}%
+            `;
+            document.body.appendChild(tooltip);
+
+            function updateTooltipPosition(e) {
+                tooltip.style.left = `${e.pageX + 10}px`;
+                tooltip.style.top = `${e.pageY - 10}px`;
+            }
+
+            updateTooltipPosition(event);
+            event.target.addEventListener('mousemove', updateTooltipPosition);
+        }
+
+        function hideTooltip() {
+            const tooltips = document.querySelectorAll('.tooltip');
+            tooltips.forEach(t => t.remove());
+        }
+
+        function updateStats() {
+            const urlParams = new URLSearchParams(window.location.search);
+            fetch(`/api/stats?key=${urlParams.get('key')}`)
+                .then(response => response.json())
+                .then(data => {
+                    const overallStats = document.getElementById('overallStats');
+                    overallStats.innerHTML = `
+                        <p>Total Attempts: <span style="color: #FFD768">${data.total_attempts || 0}</span></p>
+                        <p>Unique Players: <span style="color: #FFD768">${data.unique_players || 0}</span></p>
+                        <p>Average Score: <span style="color: #FFD768">${formatNumber(data.average_score || 0)}</span></p>
+                        <p>Best Score: <span style="color: #FFD768">${formatNumber(data.best_score || 0)}</span></p>
+                    `;
+
+                    const playerStats = document.getElementById('playerStats');
+                    if (data.top_players && data.top_players.length > 0) {
+                        const topPlayers = data.top_players
+                            .map(p => `
+                                <div class="flex justify-between">
+                                    <span>${p.initials}</span>
+                                    <span style="color: #FFD768">${formatNumber(p.best_score)}</span>
+                                </div>
+                            `)
+                            .join('');
+                        playerStats.innerHTML = topPlayers;
+                    } else {
+                        playerStats.innerHTML = '<p class="text-center">No players yet</p>';
+                    }
+
+                    renderScoreDistribution(data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('overallStats').innerHTML = '<p class="text-red-400">Error loading stats</p>';
+                    document.getElementById('playerStats').innerHTML = '<p class="text-red-400">Error loading stats</p>';
+                });
+        }
+
+        document.getElementById('targetForm').onsubmit = function(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            fetch(`/api/target?key=${urlParams.get('key')}`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            });
+        };
+
+        document.getElementById('manualScoreForm').onsubmit = function(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const urlParams = new URLSearchParams(window.location.search);
+            formData.append('key', urlParams.get('key'));
+            
+            fetch('/api/score', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    e.target.reset();
+                    updateStats();
+                    alert('Score submitted successfully');
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error submitting score. Please try again.');
+            });
+        };
+
+        function resetScores() {
+            if (confirm('Are you sure you want to close the current competition? All scores will be archived.')) {
+                const urlParams = new URLSearchParams(window.location.search);
+                fetch(`/api/reset?key=${urlParams.get('key')}`, {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                });
+            }
+        }
+
+        updateStats();
+        setInterval(updateStats, 30000);
     </script>
 </body>
 </html>

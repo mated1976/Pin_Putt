@@ -60,8 +60,53 @@
     </div>
 
     <script>
-        // JavaScript remains unchanged
-        // ... [existing JavaScript code]
+        function formatNumber(num) {
+            return new Intl.NumberFormat().format(num);
+        }
+
+        function formatDate(isoString) {
+            return new Date(isoString).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit'
+            });
+        }
+
+        function loadPlayerStats() {
+            const initials = window.location.pathname.split('/').pop();
+            fetch(`/api/player/${initials}/stats`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('totalAttempts').textContent = data.total_attempts;
+                    document.getElementById('bestScore').textContent = formatNumber(data.best_score);
+                    document.getElementById('avgScore').textContent = formatNumber(Math.round(data.average_score));
+                    document.getElementById('bestDistance').textContent = formatNumber(data.best_distance);
+
+                    const attemptsDiv = document.getElementById('attempts');
+                    attemptsDiv.innerHTML = '';
+
+                    data.attempts.reverse().forEach(attempt => {
+                        const row = document.createElement('div');
+                        row.className = 'flex items-center justify-between bg-zinc-800 p-4 rounded-lg';
+                        const diffFromTarget = attempt.score - attempt.target;
+                        
+                        row.innerHTML = `
+                            <span class="text-zinc-400">${formatDate(attempt.timestamp)}</span>
+                            <span class="score-text" style="color: #FFD768">${formatNumber(attempt.score)}</span>
+                            <span class="score-text ${diffFromTarget >= 0 ? 'text-zinc-300' : 'text-zinc-400'}">
+                                ${diffFromTarget >= 0 ? '+' : ''}${formatNumber(diffFromTarget)}
+                            </span>
+                        `;
+                        attemptsDiv.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading player stats:', error);
+                });
+        }
+
+        loadPlayerStats();
     </script>
 </body>
 </html>
