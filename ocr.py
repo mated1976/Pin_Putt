@@ -41,7 +41,7 @@ class OCRSpaceAPI:
         if self.debug:
             print(f"[OCR DEBUG] {message}")
 
-    def _compress_image(self, image_path: str, max_size_mb: float = 0.5) -> str:
+    def _compress_image(self, image_path: str, max_size_mb: float = 0.25) -> str:
         with Image.open(image_path) as img:
             # First resize by half
             new_width = img.width // 2
